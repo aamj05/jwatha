@@ -1,0 +1,13 @@
+streamlit
+streamlit-plotly-events
+pandas
+plotly
+openpyxl
+seaborn
+kaleido
+gspread
+google-auth
+matplotlib
+pyvis
+graphviz
+networkx
