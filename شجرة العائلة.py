@@ -78,7 +78,7 @@ def load_data():
     info = st.secrets["gcp_service_account"]
     creds = Credentials.from_service_account_info(info, scopes=SCOPE)
     client = gspread.authorize(creds)
-    SHEET_ID = "1KhHhAInhJGV3NO0YDZjgg86O_0KbBl5aRuXfVIpsfkU"
+    SHEET_ID = "1h66szakFiAcT2NE3aRzotCABKu_YglFhEchCjzkbwIA"
     sheet = client.open_by_key(SHEET_ID).sheet1
     data = sheet.get_all_records()
     df = pd.DataFrame(data)
