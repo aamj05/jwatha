@@ -14,17 +14,6 @@ st.set_page_config(layout="wide", page_title="🌳 مشجر أسرة آل دوغ
 
 
 
-if st.button("🔄 جلب البيانات"):
-    st.cache_data.clear()
-    df = load_data()
-    if not df.empty:
-        st.dataframe(df)
-    else:
-        st.info("ℹ️ لا توجد بيانات.")
-
-
-
-
 # ====== إضافة تسجيل الدخول ======
 @st.cache_data
 def load_user_data():
