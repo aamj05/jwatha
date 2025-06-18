@@ -112,7 +112,7 @@ with col1:
     st.markdown("""
     <div style="text-align: center; margin-top: 10px;">
         <a href="https://joghaiman.streamlit.app/" target="_blank">
-            <img class="responsive-logo" src="https://drive.google.com/thumbnail?id=1A1CWLrvWLqMN6uZXe8VyJmopV7o4PCns" alt="الصفحة الرئيسية" style="height: 200px;">
+            <img class="responsive-logo" src="https://yemen-saeed.com/user_images/news/10-05-16-677169802.jpg" alt="الصفحة الرئيسية" style="height: 200px;">
         </a>
     </div>
     """, unsafe_allow_html=True)
