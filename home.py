@@ -35,13 +35,18 @@ if not st.session_state["authenticated"]:
     
     
     # زر لجلب البيانات
-    if st.button("🔄 جلب البيانات"):
-        st.cache_data.clear()
-        df = load_data()
-        if not df.empty:
-            st.dataframe(df)
-        else:
-            st.info("ℹ️ لا توجد بيانات.")
+    if not st.session_state["authenticated"]:
+    
+        if st.button("🔁 تحديث البيانات الآن"):
+            load_user_data.clear()  # مسح الكاش
+            # load_data.clear()     # ← علق هذا السطر إذا ما كنت معرف الدالة
+            st.success("✅ تم تحديث البيانات بنجاح! الرجاء إعادة تحميل الصفحة إذا لم تظهر التغييرات.")
+            st.stop()
+
+
+
+
+    
     
     st.title("🔐 تسجيل الدخول")
     with st.form("login_form"):
