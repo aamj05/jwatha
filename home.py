@@ -31,27 +31,21 @@ user_data = load_user_data()
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
-
-
-
 if not st.session_state["authenticated"]:
     
-    st.markdown("### 🔄 تحديث البيانات من المصدر")
-
-    if st.button("🔄 جلب البيانات"):
-        st.cache_data.clear()
-        df = load_data()
-        
-        if not df.empty:
-            st.dataframe(df)
-            st.toast("✅ تم تحميل البيانات بنجاح!")
-        else:
-            st.info("ℹ️ لا توجد بيانات.")
-
-
-
-
     
+    # زر لجلب البيانات
+    if not st.session_state["authenticated"]:
+    
+        if st.button("🔁 تحديث البيانات الآن"):
+            load_user_data.clear()  # مسح الكاش
+            # load_data.clear()     # ← علق هذا السطر إذا ما كنت معرف الدالة
+            st.success("✅ تم تحديث البيانات بنجاح! الرجاء إعادة تحميل الصفحة إذا لم تظهر التغييرات.")
+            st.stop()
+
+
+
+
     
     
     st.title("🔐 تسجيل الدخول")
