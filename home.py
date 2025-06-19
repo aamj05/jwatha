@@ -39,17 +39,14 @@ if not st.session_state["authenticated"]:
     st.markdown("### 🔄 تحديث البيانات من المصدر")
 
     if st.button("🔄 جلب البيانات"):
-        st.cache_data.clear()  # مسح كل الكاش
-        try:
-            df = load_data()  # تأكد أن هذه الدالة موجودة!
-            if not df.empty:
-                st.dataframe(df)
-                st.toast("✅ تم تحميل البيانات بنجاح!")
-            else:
-                st.info("ℹ️ لا توجد بيانات.")
-        except NameError:
-            st.error("❌ الدالة load_data غير معرفة!")
-
+        st.cache_data.clear()
+        df = load_data()
+        
+        if not df.empty:
+            st.dataframe(df)
+            st.toast("✅ تم تحميل البيانات بنجاح!")
+        else:
+            st.info("ℹ️ لا توجد بيانات.")
 
 
 
