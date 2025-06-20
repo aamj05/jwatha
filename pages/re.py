@@ -178,46 +178,37 @@ if st.session_state.changed_by_mobile_toggle:
 
 
 opts = []
+
+def get_ancestors_names(df, person_id, max_generations=3):
+    names = []
+    current_id = person_id
+    for _ in range(max_generations):
+        father_row = df[df['id'] == current_id]
+        if father_row.empty:
+            break
+        father_id = father_row.iloc[0]['father_id']
+        if pd.isna(father_id):
+            break
+        father_row = df[df['id'] == father_id]
+        if father_row.empty:
+            break
+        names.append(father_row.iloc[0]['name'])
+        current_id = father_id
+    return names
+
 for _, r in data.iterrows():
-    # استخراج اسم الأب من معرف الأب
-    father_name = ''
-    if pd.notna(r['father_id']):
-        father_row = data[data['id'] == r['father_id']]
-        if not father_row.empty:
-            father_name = father_row.iloc[0]['name']
-    
-    # استخراج الفخذ من العمود رقم 7 (أي العمود التاسع بما أن الترقيم يبدأ من 0)
+    ancestors_names = get_ancestors_names(data, r['id'], max_generations=3)  # تقدر تزيد العدد حسب الحاجة
     fakhdh = r.iloc[7] if pd.notna(r.iloc[7]) else ''
-
-    # بناء النص بدون الشرطة وبدون كلمة "ابن"
-    option_text = f"{r['name']} {father_name} {fakhdh} [{r['id']}]"
-    opts.append(option_text)
-
-
-
-
-with st.sidebar:
-    st.header("🧑‍💼 اختر الشخص")
-    options = []
-    for _, r in data.iterrows():
-        father_name = ''
-        if pd.notna(r['father_id']):
-            father_row = data[data['id'] == r['father_id']]
-            if not father_row.empty:
-                father_name = father_row.iloc[0]['name']
-        fakhdh = r.iloc[7] if pd.notna(r.iloc[7]) else ''
-        label = f"{r['name']} {father_name} {fakhdh} [{r['id']}]"
-        options.append(label)
-    
-    selected_option = st.selectbox("👤 اختر من القائمة:", options)
+    # ندمج الاسم مع أسماء الآباء والجدود بشكل متسلسل
+    full_name = r['name'] + " " + " ".join(ancestors_names) + f" {fakhdh} [{r['id']}]"
+    opts.append(full_name)
 
 
 
 
 
 
-
-
+sel = st.selectbox("👤 اكتب رقم المعرف ثم الاسم", opts, index=0)
 tree_type = st.radio(
     "🌳 نوع المشجر",
     ["الأنسال (الأبناء)", "الأسلاف (الآباء)", "الكل (أسلاف + أنسال)"],
@@ -226,18 +217,13 @@ tree_type = st.radio(
 generations = st.slider("📚 عدد الأجيال", 1, 15, 8)
 
 
-
-
 import re
-match = re.search(r'\[(\d+)\]$', selected_option)
+
+match = re.search(r'\[(\d+)\]$', sel)
 if match:
     person_id = int(match.group(1))
 else:
-    st.error("❌ لم يتم استخراج المعرف من الخيار المختار.")
-    st.stop()
-
-
-
+    st.error("لم يتم العثور على المعرف في السطر المحدد.")
 
 
 
