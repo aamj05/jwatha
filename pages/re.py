@@ -522,12 +522,11 @@ selected_points = plotly_events(fig, click_event=True, key="sunburst_chart", ove
 
 
 
-import re
+
 
 if selected_points:
-    selected_id = int(selected_points[0]['customdata'])
-
-        
+    try:
+        selected_id = int(selected_points[0]['customdata'])
         selected_person = data[data['id'] == selected_id].iloc[0]
 
         def get_fathers_chain(df, pid, max_depth=10):
@@ -552,9 +551,8 @@ if selected_points:
         st.markdown("### 🧬 تسلسل الأباء:")
         st.success(father_chain)
 
-    else:
-        st.warning("⚠️ لم يتم العثور على المعرف داخل العنصر المحدد.")
-
+    except Exception as e:
+        st.warning(f"حدث خطأ أثناء المعالجة: {e}")
 
 
 
