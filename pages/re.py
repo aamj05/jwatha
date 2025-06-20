@@ -7,9 +7,6 @@ from collections import OrderedDict
 from google.oauth2.service_account import Credentials
 from streamlit_plotly_events import plotly_events
 
-
-
-
 # إعداد صفحة Streamlit
 st.set_page_config(layout="wide", page_title="🌳 مشجر أسرة آل دوغان")
 
@@ -514,31 +511,16 @@ st.markdown(html_card, unsafe_allow_html=True)
 
 
 
+
 # --- عرض المخطط في المنتصف ---
 fig = draw(data, t, male_color, female_color, st.session_state['zoom'], center_ancestors=center_mode)
 
 st.markdown("<div style='display: flex; justify-content: center;'>", unsafe_allow_html=True)
-selected_points = plotly_events(fig, click_event=True, key="sunburst_chart")
+st.plotly_chart(fig, use_container_width=True, key="sunburst_chart")
 st.markdown("</div>", unsafe_allow_html=True)
 
 
 
-
-
-selected_id = None
-if selected_points:
-    raw_id = selected_points[0].get('id') or selected_points[0].get('customdata')
-    if isinstance(raw_id, (list, tuple)):
-        raw_id = raw_id[0] if len(raw_id) > 0 else None
-    try:
-        selected_id = int(raw_id)
-    except:
-        selected_id = None
-
-st.text_input("رقم المعرف المختار:", value=str(selected_id) if selected_id is not None else "لم يتم التحديد", disabled=True)
-
-
-# بعد ذلك أكمل أكواد التكبير والتصغير كما في كودك
 st.markdown("<div class='zoom-container'>", unsafe_allow_html=True)
 col1, col2, col3 = st.columns([1, 1, 1])
 with col1:
@@ -553,4 +535,5 @@ with col3:
         st.session_state.zoom = min(st.session_state.zoom + 0.1, 3.0)
         st.session_state.changed_by_mobile_toggle = False
         st.rerun()
+
 st.markdown("</div>", unsafe_allow_html=True)
