@@ -179,27 +179,33 @@ if st.session_state.changed_by_mobile_toggle:
 
 opts = []
 
-def get_ancestors_names(df, person_id, max_generations=9):
+def get_all_ancestors_names(df, person_id):
     names = []
     current_id = person_id
-    for _ in range(max_generations):
+    
+    while True:
         father_row = df[df['id'] == current_id]
         if father_row.empty:
             break
+        
         father_id = father_row.iloc[0]['father_id']
         if pd.isna(father_id):
             break
+        
         father_row = df[df['id'] == father_id]
         if father_row.empty:
             break
+        
         names.append(father_row.iloc[0]['name'])
         current_id = father_id
+        
     return names
 
+
+opts = []
 for _, r in data.iterrows():
-    ancestors_names = get_ancestors_names(data, r['id'], max_generations=3)  # تقدر تزيد العدد حسب الحاجة
+    ancestors_names = get_all_ancestors_names(data, r['id'])  # بدون حد أقصى
     fakhdh = r.iloc[7] if pd.notna(r.iloc[7]) else ''
-    # ندمج الاسم مع أسماء الآباء والجدود بشكل متسلسل
     full_name = r['name'] + " " + " ".join(ancestors_names) + f" {fakhdh} [{r['id']}]"
     opts.append(full_name)
 
