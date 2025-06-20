@@ -10,6 +10,10 @@ from streamlit_plotly_events import plotly_events
 # إعداد صفحة Streamlit
 st.set_page_config(layout="wide", page_title="🌳 مشجر أسرة آل دوغان")
 
+
+
+
+
 # ====== إضافة تسجيل الدخول ======
 @st.cache_data
 def load_user_data():
@@ -28,6 +32,20 @@ if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
 
 if not st.session_state["authenticated"]:
+    
+    
+    # زر لجلب البيانات
+    if not st.session_state["authenticated"]:
+    
+        if st.button("🔄 جلب المعلومات من قاعدة البيانات", key="refresh_2"):
+            st.cache_data.clear()
+            st.rerun()
+
+
+
+
+    
+    
     st.title("🔐 تسجيل الدخول")
     with st.form("login_form"):
         username = st.text_input("اسم المستخدم")
@@ -41,6 +59,8 @@ if not st.session_state["authenticated"]:
             else:
                 st.error("❌ اسم المستخدم أو كلمة المرور غير صحيحة")
     st.stop()
+
+
 
 st.markdown("""
 <style>
@@ -83,11 +103,11 @@ def load_data():
     df["order"] = df.index
     df = df.loc[:, ~df.columns.str.match(r'^\d+$')]
     df = df.rename(columns={
-        'ID': 'id',
-        'Full Name': 'name',
+        'ID': 'id', 
+        'Full Name': 'name', 
         'Sex (M/F)': 'gender',
-        'Father ID': 'father_id',
-        'Date of Birth': 'birth',
+        'Father ID': 'father_id', 
+        'Date of Birth': 'birth', 
         'Date of Death': 'death'
     })
     return df
@@ -123,6 +143,7 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
 
+
 if 'is_mobile' not in st.session_state:
     st.session_state.is_mobile = False
 
@@ -136,8 +157,8 @@ previous_is_mobile_state = st.session_state.is_mobile
 
 # إنشاء خانة الاختيار
 st.session_state.is_mobile = st.checkbox(
-    "📱 هل تستخدم هاتف؟",
-    value=st.session_state.is_mobile,
+    "📱 هل تستخدم هاتف؟", 
+    value=st.session_state.is_mobile, 
     key="mobile_view_checkbox"
 )
 
@@ -154,6 +175,8 @@ if st.session_state.is_mobile != previous_is_mobile_state:
 if st.session_state.changed_by_mobile_toggle:
     st.session_state.changed_by_mobile_toggle = False
 
+
+
 opts = []
 for _, r in data.iterrows():
     # استخراج اسم الأب من معرف الأب
@@ -162,13 +185,16 @@ for _, r in data.iterrows():
         father_row = data[data['id'] == r['father_id']]
         if not father_row.empty:
             father_name = father_row.iloc[0]['name']
-
+    
     # استخراج الفخذ من العمود رقم 7 (أي العمود التاسع بما أن الترقيم يبدأ من 0)
     fakhdh = r.iloc[7] if pd.notna(r.iloc[7]) else ''
 
     # بناء النص بدون الشرطة وبدون كلمة "ابن"
     option_text = f"{r['name']} {father_name} {fakhdh} [{r['id']}]"
     opts.append(option_text)
+
+
+
 
 sel = st.selectbox("👤 اكتب رقم المعرف ثم الاسم", opts, index=0)
 tree_type = st.radio(
@@ -178,6 +204,7 @@ tree_type = st.radio(
 )
 generations = st.slider("📚 عدد الأجيال", 1, 15, 8)
 
+
 import re
 
 match = re.search(r'\[(\d+)\]$', sel)
@@ -185,6 +212,8 @@ if match:
     person_id = int(match.group(1))
 else:
     st.error("لم يتم العثور على المعرف في السطر المحدد.")
+
+
 
 col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
 
@@ -196,6 +225,10 @@ with col3:
     st.markdown("<h5 style='text-align:right;'>🎩 لون الذكور</h5>", unsafe_allow_html=True)
 with col4:
     male_color = st.color_picker("", "#81C3F1", label_visibility="collapsed")
+
+
+
+
 
 def get_descendants(df, pid, gens):
     t = OrderedDict({0: [pid]})
@@ -225,26 +258,17 @@ def get_ancestors(df, pid, gens):
             t[g] = cur
     return t
 
-def get_ancestors_names(df, pid):
-    ancestors = []
-    current_id = pid
-    while True:
-        row = df[df['id'] == current_id]
-        if row.empty:
-            break
-        name = row['name'].values[0]
-        ancestors.append(name)
-        father_id = row['father_id'].values[0]
-        if pd.isna(father_id):
-            break
-        current_id = int(father_id)
-    return ancestors
-
 def merge_trees(a, d):
     # تحوّل مفاتيح شجرة الأسلاف إلى قيم سالبة ثم دمجها مع شجرة الأنسال
     return {**{-k: v for k, v in a.items()}, **d}
 
 def prepare_sunburst(df, tree, center_ancestors=False):
+    """
+    إذا كان center_ancestors مفعل، نحدد الجذر بناءً على عمق الأسلاف:
+      - إذا كانت مفاتيح الشجرة تحتوي على قيم سالبة (نتيجة الدمج)، يكون الجذر عند min(keys).
+      - وإذا كانت المفاتيح إيجابية (شجرة الأسلاف فقط) يكون الجذر عند max(keys).
+    أما إذا كان غير مفعل (أي في وضع الأنسال) فيكون الشخص المختار هو المحور.
+    """
     ids, labels, parents, genders, hov = [], [], [], [], []
     info = df.set_index('id').to_dict('index')
     seen = set()
@@ -278,15 +302,22 @@ def prepare_sunburst(df, tree, center_ancestors=False):
             labels.append(label_text)
             ids.append(str(n))
             genders.append(g)
+            # شرط التحديد:
+            # - إذا كان center_ancestors مفعل، نطابق العمق مع center_depth.
+            # - أما إذا كان غير مفعل (وضع الأنسال) فيجب أن تكون العقدة التي تساوي person_id هي المركز.
             if (center_ancestors and center_depth is not None and depth == center_depth) or (not center_ancestors and n == person_id):
                 parents.append('')
             else:
                 fpid = rec.get('father_id', '')
                 parents.append(str(int(fpid)) if pd.notna(fpid) and fpid != '' else '')
             hover_lines = [
-                f"<span style='color:#800000;font-weight:bold;font-size:16px;'>المعرف:</span> "
-                f"<span style='color:darkblue;font-weight:bold;font-size:14px;'>{n}</span>"
-            ]
+    f"<span style='color:#800000;font-weight:bold;font-size:16px;'>المعرف:</span> "
+    f"<span style='color:darkblue;font-weight:bold;font-size:14px;'>{n}</span>"
+]
+
+
+
+
             for col in df.columns:
                 if col in ['id', 'order', 'صورة']:
                     continue
@@ -303,22 +334,30 @@ def prepare_sunburst(df, tree, center_ancestors=False):
                     except:
                         value = f"({value})"
                 hover_lines.append(
-                    f"<span style='color:#800000;font-weight:bold;font-size:16px;'>{translated_col}:</span> "
-                    f"<span style='color:darkblue;font-weight:bold;font-size:14px;'>{value}</span>"
-                )
+    f"<span style='color:#800000;font-weight:bold;font-size:16px;'>{translated_col}:</span> "
+    f"<span style='color:darkblue;font-weight:bold;font-size:14px;'>{value}</span>"
+)
+
             hov.append("<br>".join(hover_lines))
     return ids, labels, parents, genders, hov
 
 def draw(df, tree, mcol, fcol, zoom, center_ancestors=False):
     ids, labels, parents, genders, hov = prepare_sunburst(df, tree, center_ancestors=center_ancestors)
     cols = [mcol if g == 'M' else fcol for g in genders]
+    
+# الأسطر الجديدة التي ستضيفها لحساب حجم الخط sz:
+    # الحصول على إعدادات حجم الخط الأساسي والتكبير الحالي
+    # افترض أن font_size قد يكون لديك كإعداد إضافي للمستخدم، وإلا سيعتمد على 18
+    base_font_size = st.session_state.get("font_size", 18) 
+    current_zoom_level = zoom  # 'zoom' هو معامل يتم تمريره للدالة draw
 
-    base_font_size = st.session_state.get("font_size", 18)
-    current_zoom_level = zoom
-
+    # التحقق إذا كان وضع الهاتف مفعل من خلال متغيرات الحالة
     if st.session_state.get("is_mobile", False):
-        sz = min(16, max(8, int(base_font_size * current_zoom_level * 0.8)))
+        # إذا كان وضع الهاتف، طبق حجم خط أصغر ومدى أضيق
+        # مثال: تصغير إضافي بنسبة وجعل الحدود (الأصغر والأكبر) أقل
+        sz = min(16, max(8, int(base_font_size * current_zoom_level * 0.8))) 
     else:
+        # إذا لم يكن وضع الهاتف، استخدم الحساب الأصلي لحجم الخط
         sz = min(26, max(10, int(base_font_size * current_zoom_level)))
 
     fig = go.Figure(go.Sunburst(
@@ -334,13 +373,14 @@ def draw(df, tree, mcol, fcol, zoom, center_ancestors=False):
         textinfo='label',
         textfont=dict(size=sz)
     ))
-
+    
     fig.update_layout(
-        margin=dict(t=10, l=10, r=10, b=10),
-        autosize=True,
-        height=700,
-        hoverlabel=dict(bgcolor="white", font_size=14, font_family="Cairo", align="right", namelength=-1)
-    )
+    margin=dict(t=10, l=10, r=10, b=10),
+    autosize=True,
+    height=700,
+    hoverlabel=dict(bgcolor="white", font_size=14, font_family="Cairo", align="right", namelength=-1)
+)
+
 
     return fig
 
@@ -355,25 +395,31 @@ else:
     t = merge_trees(get_ancestors(data, person_id, generations), get_descendants(data, person_id, generations))
     center_mode = True   # عند الدمج، نفضل أن يكون الجزء الأسلافي هو المحور
 
+# --- عرض بطاقة الأب والأبناء في نفس السطر أو الأب فقط إن لم يكن لديه أبناء ---
+
+
+# --- عرض بطاقة الأب والأبناء في نفس السطر أو الأب فقط إن لم يكن لديه أبناء ---
+
 # استخراج بيانات الأب
 person_row = data[data['id'] == person_id].iloc[0]
-صورة_الأب = person_row.get('صورة', '').replace("uc?export=view", "thumbnail")
-اسم_الأب = person_row['name']
+صورة_الأب  = person_row.get('صورة', '').replace("uc?export=view", "thumbnail")
+اسم_الأب   = person_row['name']
 
 # استخراج الأبناء وتصنيفهم
-أبناء = data[data['father_id'] == person_id]
-أبناء_إناث = أبناء[أبناء['gender'].str.strip().str.upper() == 'F']
-أبناء_ذكور = أبناء[أبناء['gender'].str.strip().str.upper() == 'M']
+أبناء       = data[data['father_id'] == person_id]
+أبناء_إناث  = أبناء[أبناء['gender'].str.strip().str.upper() == 'F']
+أبناء_ذكور  = أبناء[أبناء['gender'].str.strip().str.upper() == 'M']
 
 # HTML للبنات (65×65px) مع عكس الترتيب
 left_html = "".join([
     f'<div style="text-align:center;">'
     f'<img src="{row.get("صورة","").replace("uc?export=view","thumbnail")}" '
-    f'width="65" height="65" style="border-radius:50%;object-fit:cover;">'
+       f'width="65" height="65" style="border-radius:50%;object-fit:cover;">'
     f'<p style="margin:0;color:#e83e8c;font-weight:bold;">{row["name"]}</p>'
     f'</div>'
     for _, row in أبناء_إناث.iloc[::-1].iterrows()  # نعيك الصفوف هنا
 ])
+
 
 # HTML للأب (100×100px)
 center_html = (
@@ -387,7 +433,7 @@ center_html = (
 right_html = "".join([
     f'<div style="text-align:center;">'
     f'<img src="{row.get("صورة","").replace("uc?export=view","thumbnail")}" '
-    f'width="75" height="75" style="border-radius:50%;object-fit:cover;">'
+       f'width="75" height="75" style="border-radius:50%;object-fit:cover;">'
     f'<p style="margin:0;color:#007bff;font-weight:bold;">{row["name"]}</p>'
     f'</div>'
     for _, row in أبناء_ذكور.iterrows()
@@ -462,19 +508,18 @@ html_card = f"""
 # عرض البطاقة في Streamlit
 st.markdown(html_card, unsafe_allow_html=True)
 
-# رسم المخطط
+
+
+
+
+# --- عرض المخطط في المنتصف ---
 fig = draw(data, t, male_color, female_color, st.session_state['zoom'], center_ancestors=center_mode)
-chart = st.plotly_chart(fig, use_container_width=True, key="sunburst_chart_display")
 
-# التعامل مع أحداث النقر على العقد
-selected_points = plotly_events(fig, key="sunburst_chart_events")
+st.markdown("<div style='display: flex; justify-content: center;'>", unsafe_allow_html=True)
+st.plotly_chart(fig, use_container_width=True, key="sunburst_chart")
+st.markdown("</div>", unsafe_allow_html=True)
 
-if selected_points:
-    point = selected_points[0]
-    person_id = int(point['pointNumber'])
-    ancestors = get_ancestors_names(data, person_id)
-    ancestors_names = " -> ".join(ancestors)
-    st.write(f"الاسم الكامل للأسلاف: {ancestors_names}")
+
 
 st.markdown("<div class='zoom-container'>", unsafe_allow_html=True)
 col1, col2, col3 = st.columns([1, 1, 1])
