@@ -527,35 +527,38 @@ selected_points = plotly_events(fig, click_event=True, key="sunburst_chart", ove
 
 if selected_points:
     try:
-        selected_id = int(selected_points[0].get('customdata') or selected_points[0].get('pointNumber'))
+        raw_id = selected_points[0].get('customdata', '')
+        if raw_id and str(raw_id).isdigit():
+            selected_id = int(raw_id)
 
-        selected_person = data[data['id'] == selected_id].iloc[0]
+            selected_person = data[data['id'] == selected_id].iloc[0]
 
-        def get_fathers_chain(df, pid, max_depth=10):
-            chain = []
-            current_id = pid
-            for _ in range(max_depth):
-                row = df[df['id'] == current_id]
-                if row.empty:
-                    break
-                person = row.iloc[0]
-                chain.append(f"{person['name']} ({person['id']})")
-                if pd.isna(person['father_id']):
-                    break
-                current_id = int(person['father_id'])
-            return " ← ".join(chain)
+            def get_fathers_chain(df, pid, max_depth=10):
+                chain = []
+                current_id = pid
+                for _ in range(max_depth):
+                    row = df[df['id'] == current_id]
+                    if row.empty:
+                        break
+                    person = row.iloc[0]
+                    chain.append(f"{person['name']} ({person['id']})")
+                    if pd.isna(person['father_id']):
+                        break
+                    current_id = int(person['father_id'])
+                return " ← ".join(chain)
 
-        father_chain = get_fathers_chain(data, selected_id)
+            father_chain = get_fathers_chain(data, selected_id)
 
-        st.markdown("### 👤 الشخص المحدد:")
-        st.info(f"**{selected_person['name']}** (المعرف: {selected_id})")
+            st.markdown("### 👤 الشخص المحدد:")
+            st.info(f"**{selected_person['name']}** (المعرف: {selected_id})")
 
-        st.markdown("### 🧬 تسلسل الآباء:")
-        st.success(father_chain)
+            st.markdown("### 🧬 تسلسل الآباء:")
+            st.success(father_chain)
+        else:
+            st.warning("⚠️ لم يتم العثور على معرف صالح داخل العنصر المحدد.")
 
     except Exception as e:
         st.warning(f"حدث خطأ أثناء المعالجة: {e}")
-
 
 
 
