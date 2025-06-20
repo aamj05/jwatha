@@ -179,7 +179,7 @@ if st.session_state.changed_by_mobile_toggle:
 
 opts = []
 
-def get_ancestors_names(df, person_id, max_generations=3):
+def get_ancestors_names(df, person_id, max_generations=9):
     names = []
     current_id = person_id
     for _ in range(max_generations):
