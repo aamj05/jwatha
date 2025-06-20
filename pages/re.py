@@ -450,11 +450,11 @@ st.markdown(html_card, unsafe_allow_html=True)
 fig = draw(data, t, male_color, female_color, st.session_state['zoom'], center_ancestors=center_mode)
 
 st.markdown("<div style='display: flex; justify-content: center;'>", unsafe_allow_html=True)
-st.plotly_chart(fig, use_container_width=True, key="sunburst_chart")
+st.plotly_chart(fig, use_container_width=True, key="sunburst_chart_unique")
 st.markdown("</div>", unsafe_allow_html=True)
 
 # بعد رسم المخطط، أضف الكود التالي للتعامل مع أحداث النقر
-selected_points = plotly_events(fig, key="sunburst_chart")
+selected_points = plotly_events(fig, key="sunburst_chart_events_unique")
 
 if selected_points:
     point = selected_points[0]
