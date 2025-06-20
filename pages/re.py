@@ -2,6 +2,7 @@ import plotly.graph_objects as go
 import io
 import streamlit as st
 import pandas as pd
+import re
 import gspread
 from collections import OrderedDict
 from google.oauth2.service_account import Credentials
@@ -517,34 +518,53 @@ fig = draw(data, t, male_color, female_color, st.session_state['zoom'], center_a
 
 st.markdown("<div style='display: flex; justify-content: center;'>", unsafe_allow_html=True)
 selected_points = plotly_events(fig, click_event=True, key="sunburst_chart", override_height=700)
+
+
+
+import re
+
 if selected_points:
-    selected_id = int(selected_points[0]['id'])
+    label_text = selected_points[0].get("label", "")
+    match = re.search(r'<span style=.color:blue.>(\d+)</span>', label_text)
+    if match:
+        selected_id = int(match.group(1))
+        
+        selected_person = data[data['id'] == selected_id].iloc[0]
 
-    # استخراج سجل الشخص المختار
-    selected_person = data[data['id'] == selected_id].iloc[0]
+        def get_fathers_chain(df, pid, max_depth=10):
+            chain = []
+            current_id = pid
+            for _ in range(max_depth):
+                row = df[df['id'] == current_id]
+                if row.empty:
+                    break
+                person = row.iloc[0]
+                chain.append(f"{person['name']} ({person['id']})")
+                if pd.isna(person['father_id']):
+                    break
+                current_id = int(person['father_id'])
+            return " ← ".join(chain)
 
-    # تجهيز سلسلة الأجداد
-    def get_fathers_chain(df, pid, max_depth=10):
-        chain = []
-        current_id = pid
-        for _ in range(max_depth):
-            row = df[df['id'] == current_id]
-            if row.empty:
-                break
-            person = row.iloc[0]
-            chain.append(f"{person['name']} ({person['id']})")
-            if pd.isna(person['father_id']):
-                break
-            current_id = int(person['father_id'])
-        return " ← ".join(chain)
+        father_chain = get_fathers_chain(data, selected_id)
 
-    father_chain = get_fathers_chain(data, selected_id)
+        st.markdown("### 👤 الشخص المحدد:")
+        st.info(f"**{selected_person['name']}** (المعرف: {selected_id})")
 
-    st.markdown("### 👤 الشخص المحدد:")
-    st.info(f"**{selected_person['name']}** (المعرف: {selected_id})")
+        st.markdown("### 🧬 تسلسل الأباء:")
+        st.success(father_chain)
 
-    st.markdown("### 🧬 تسلسل الأباء:")
-    st.success(father_chain)
+    else:
+        st.warning("⚠️ لم يتم العثور على المعرف داخل العنصر المحدد.")
+
+
+
+
+
+
+
+
+
+
 
 st.markdown("</div>", unsafe_allow_html=True)
 
