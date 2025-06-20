@@ -372,7 +372,7 @@ def draw(df, tree, mcol, fcol, zoom, center_ancestors=False):
         hoverinfo='text',
         insidetextorientation='auto',
         textinfo='label',
-        textfont=dict(size=sz)
+        textfont=dict(size=sz),
         customdata=ids
     ))
     
