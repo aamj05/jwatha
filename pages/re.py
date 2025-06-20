@@ -518,11 +518,11 @@ st.markdown(html_card, unsafe_allow_html=True)
 fig = draw(data, t, male_color, female_color, st.session_state['zoom'], center_ancestors=center_mode)
 
 st.markdown("<div style='display: flex; justify-content: center;'>", unsafe_allow_html=True)
+
+
+
+
 selected_points = plotly_events(fig, click_event=True, key="sunburst_chart", override_height=700)
-
-
-
-
 
 if selected_points:
     try:
@@ -548,13 +548,11 @@ if selected_points:
         st.markdown("### 👤 الشخص المحدد:")
         st.info(f"**{selected_person['name']}** (المعرف: {selected_id})")
 
-        st.markdown("### 🧬 تسلسل الأباء:")
+        st.markdown("### 🧬 تسلسل الآباء:")
         st.success(father_chain)
 
     except Exception as e:
         st.warning(f"حدث خطأ أثناء المعالجة: {e}")
-
-
 
 
 
