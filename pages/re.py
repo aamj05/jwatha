@@ -196,7 +196,28 @@ for _, r in data.iterrows():
 
 
 
-sel = st.selectbox("👤 اكتب رقم المعرف ثم الاسم", opts, index=0)
+with st.sidebar:
+    st.header("🧑‍💼 اختر الشخص")
+    options = []
+    for _, r in data.iterrows():
+        father_name = ''
+        if pd.notna(r['father_id']):
+            father_row = data[data['id'] == r['father_id']]
+            if not father_row.empty:
+                father_name = father_row.iloc[0]['name']
+        fakhdh = r.iloc[7] if pd.notna(r.iloc[7]) else ''
+        label = f"{r['name']} {father_name} {fakhdh} [{r['id']}]"
+        options.append(label)
+    
+    selected_option = st.selectbox("👤 اختر من القائمة:", options)
+
+
+
+
+
+
+
+
 tree_type = st.radio(
     "🌳 نوع المشجر",
     ["الأنسال (الأبناء)", "الأسلاف (الآباء)", "الكل (أسلاف + أنسال)"],
@@ -205,13 +226,18 @@ tree_type = st.radio(
 generations = st.slider("📚 عدد الأجيال", 1, 15, 8)
 
 
-import re
 
-match = re.search(r'\[(\d+)\]$', sel)
+
+import re
+match = re.search(r'\[(\d+)\]$', selected_option)
 if match:
     person_id = int(match.group(1))
 else:
-    st.error("لم يتم العثور على المعرف في السطر المحدد.")
+    st.error("❌ لم يتم استخراج المعرف من الخيار المختار.")
+    st.stop()
+
+
+
 
 
 
