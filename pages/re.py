@@ -521,6 +521,10 @@ st.markdown("<div style='display: flex; justify-content: center;'>", unsafe_allo
 selected_points = plotly_events(fig, click_event=True, key="sunburst_chart")
 st.markdown("</div>", unsafe_allow_html=True)
 
+
+
+
+
 selected_id = None
 if selected_points:
     raw_id = selected_points[0].get('id') or selected_points[0].get('customdata')
