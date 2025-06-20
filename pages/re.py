@@ -464,10 +464,10 @@ st.markdown(html_card, unsafe_allow_html=True)
 
 # رسم المخطط
 fig = draw(data, t, male_color, female_color, st.session_state['zoom'], center_ancestors=center_mode)
-st.plotly_chart(fig, use_container_width=True, key="sunburst_chart")
+st.plotly_chart(fig, use_container_width=True, key="sunburst_chart_display")
 
 # التعامل مع أحداث النقر على العقد
-selected_points = plotly_events(fig, key="sunburst_chart")
+selected_points = plotly_events(fig, key="sunburst_chart_events")
 
 if selected_points:
     point = selected_points[0]
