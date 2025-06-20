@@ -373,6 +373,7 @@ def draw(df, tree, mcol, fcol, zoom, center_ancestors=False):
         insidetextorientation='auto',
         textinfo='label',
         textfont=dict(size=sz)
+        customdata=ids
     ))
     
     fig.update_layout(
@@ -524,10 +525,8 @@ selected_points = plotly_events(fig, click_event=True, key="sunburst_chart", ove
 import re
 
 if selected_points:
-    label_text = selected_points[0].get("label", "")
-    match = re.search(r'<span style=.color:blue.>(\d+)</span>', label_text)
-    if match:
-        selected_id = int(match.group(1))
+    selected_id = int(selected_points[0]['customdata'])
+
         
         selected_person = data[data['id'] == selected_id].iloc[0]
 
