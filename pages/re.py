@@ -365,16 +365,17 @@ def draw(df, tree, mcol, fcol, zoom, center_ancestors=False):
         ids=ids,
         labels=labels,
         parents=parents,
+        customdata=ids,  # ← هنا
         sort=False,
         marker=dict(colors=cols),
         branchvalues='total',
-        hovertext=hov,
+        hovertext=hov,   
         hoverinfo='text',
         insidetextorientation='auto',
         textinfo='label',
-        textfont=dict(size=sz),
-        customdata=ids
+        textfont=dict(size=sz)
     ))
+
     
     fig.update_layout(
     margin=dict(t=10, l=10, r=10, b=10),
@@ -526,7 +527,8 @@ selected_points = plotly_events(fig, click_event=True, key="sunburst_chart", ove
 
 if selected_points:
     try:
-        selected_id = int(selected_points[0]['customdata'])
+        selected_id = int(selected_points[0].get('customdata') or selected_points[0].get('pointNumber'))
+
         selected_person = data[data['id'] == selected_id].iloc[0]
 
         def get_fathers_chain(df, pid, max_depth=10):
