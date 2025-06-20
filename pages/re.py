@@ -2,11 +2,13 @@ import plotly.graph_objects as go
 import io
 import streamlit as st
 import pandas as pd
-import re
 import gspread
 from collections import OrderedDict
 from google.oauth2.service_account import Credentials
 from streamlit_plotly_events import plotly_events
+
+
+
 
 # إعداد صفحة Streamlit
 st.set_page_config(layout="wide", page_title="🌳 مشجر أسرة آل دوغان")
@@ -114,7 +116,6 @@ def load_data():
     return df
 
 data = load_data()
-id_to_name = {row['id']: row['name'] for _, row in data.iterrows()}
 
 # قاموس التعريب
 column_translations = {
@@ -366,7 +367,6 @@ def draw(df, tree, mcol, fcol, zoom, center_ancestors=False):
         ids=ids,
         labels=labels,
         parents=parents,
-        customdata=ids,  # ← هنا
         sort=False,
         marker=dict(colors=cols),
         branchvalues='total',
@@ -374,10 +374,8 @@ def draw(df, tree, mcol, fcol, zoom, center_ancestors=False):
         hoverinfo='text',
         insidetextorientation='auto',
         textinfo='label',
-        textfont=dict(size=sz),
+        textfont=dict(size=sz)
     ))
-
-
     
     fig.update_layout(
     margin=dict(t=10, l=10, r=10, b=10),
@@ -515,71 +513,40 @@ st.markdown(html_card, unsafe_allow_html=True)
 
 
 
+
 # --- عرض المخطط في المنتصف ---
 fig = draw(data, t, male_color, female_color, st.session_state['zoom'], center_ancestors=center_mode)
 
 st.markdown("<div style='display: flex; justify-content: center;'>", unsafe_allow_html=True)
-
-selected_points = plotly_events(fig, click_event=True, key="sunburst_chart", override_height=700)
-
-if selected_points:
-    try:
-        raw_id = selected_points[0].get('customdata', '')
-        # إذا كانت customdata قائمة، خذ أول عنصر منها
-        if isinstance(raw_id, (list, tuple)):
-            raw_id = raw_id[0] if len(raw_id) > 0 else ''
-        if raw_id and str(raw_id).isdigit():
-            selected_id = int(raw_id)
-
-            # جلب الاسم مباشرة من القاموس
-            selected_name = id_to_name.get(selected_id, "غير معروف")
-
-            # إذا كنت تحتاج بيانات أخرى، ابحث في dataframe مرة واحدة فقط
-            selected_person = data[data['id'] == selected_id].iloc[0]
-
-            def get_fathers_chain(df, pid, max_depth=10):
-                chain = []
-                current_id = pid
-                for _ in range(max_depth):
-                    row = df[df['id'] == current_id]
-                    if row.empty:
-                        break
-                    person = row.iloc[0]
-                    # استبدل الاسم بالاسم من القاموس (اختياري)
-                    name = id_to_name.get(person['id'], person['name'])
-                    chain.append(f"{name} ({person['id']})")
-                    if pd.isna(person['father_id']):
-                        break
-                    current_id = int(person['father_id'])
-                return " ← ".join(chain)
-
-            father_chain = get_fathers_chain(data, selected_id)
-
-            st.markdown("### 👤 الشخص المحدد:")
-            st.info(f"**{selected_name}** (المعرف: {selected_id})")
-
-            st.markdown("### 🧬 تسلسل الآباء:")
-            st.success(father_chain)
-        else:
-            st.warning("⚠️ لم يتم العثور على معرف صالح داخل العنصر المحدد.")
-
-    except Exception as e:
-        st.warning(f"حدث خطأ أثناء المعالجة: {e}")
-
+selected_points = plotly_events(fig, click_event=True, key="sunburst_chart")
 st.markdown("</div>", unsafe_allow_html=True)
 
+selected_id = None
+if selected_points:
+    raw_id = selected_points[0].get('id') or selected_points[0].get('customdata')
+    if isinstance(raw_id, (list, tuple)):
+        raw_id = raw_id[0] if len(raw_id) > 0 else None
+    try:
+        selected_id = int(raw_id)
+    except:
+        selected_id = None
+
+st.text_input("رقم المعرف المختار:", value=str(selected_id) if selected_id is not None else "لم يتم التحديد", disabled=True)
+
+
+# بعد ذلك أكمل أكواد التكبير والتصغير كما في كودك
 st.markdown("<div class='zoom-container'>", unsafe_allow_html=True)
 col1, col2, col3 = st.columns([1, 1, 1])
 with col1:
     if st.button("➖ تصغير", key="zoom_out"):
         st.session_state.zoom = max(st.session_state.zoom - 0.1, 0.2)
         st.session_state.changed_by_mobile_toggle = False
-        st.experimental_rerun()
+        st.rerun()
 with col2:
     st.markdown(f"<div style='text-align:center;font-weight:bold;margin-top:8px;'>🔍 {st.session_state.zoom * 100:.0f}%</div>", unsafe_allow_html=True)
 with col3:
     if st.button("➕ تكبير", key="zoom_in"):
         st.session_state.zoom = min(st.session_state.zoom + 0.1, 3.0)
         st.session_state.changed_by_mobile_toggle = False
-        st.experimental_rerun()
+        st.rerun()
 st.markdown("</div>", unsafe_allow_html=True)
