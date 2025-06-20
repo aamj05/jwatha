@@ -514,7 +514,6 @@ st.markdown(html_card, unsafe_allow_html=True)
 
 
 
-
 # --- عرض المخطط في المنتصف ---
 fig = draw(data, t, male_color, female_color, st.session_state['zoom'], center_ancestors=center_mode)
 
@@ -525,6 +524,12 @@ selected_points = plotly_events(fig, click_event=True, key="sunburst_chart", ove
 if selected_points:
     try:
         raw_id = selected_points[0].get('customdata', '')
+        # إذا كانت customdata قائمة، خذ أول عنصر منها
+        if isinstance(raw_id, (list, tuple)):
+            if len(raw_id) > 0:
+                raw_id = raw_id[0]
+            else:
+                raw_id = ''
         if raw_id and str(raw_id).isdigit():
             selected_id = int(raw_id)
 
