@@ -369,12 +369,13 @@ def draw(df, tree, mcol, fcol, zoom, center_ancestors=False):
         sort=False,
         marker=dict(colors=cols),
         branchvalues='total',
-        hovertext=hov,   
+        hovertext=hov,
         hoverinfo='text',
         insidetextorientation='auto',
         textinfo='label',
-        textfont=dict(size=sz)
+        textfont=dict(size=sz),
     ))
+
 
     
     fig.update_layout(
@@ -514,14 +515,10 @@ st.markdown(html_card, unsafe_allow_html=True)
 
 
 
-
 # --- عرض المخطط في المنتصف ---
 fig = draw(data, t, male_color, female_color, st.session_state['zoom'], center_ancestors=center_mode)
 
 st.markdown("<div style='display: flex; justify-content: center;'>", unsafe_allow_html=True)
-
-
-
 
 selected_points = plotly_events(fig, click_event=True, key="sunburst_chart", override_height=700)
 
@@ -560,15 +557,7 @@ if selected_points:
     except Exception as e:
         st.warning(f"حدث خطأ أثناء المعالجة: {e}")
 
-
-
-
-
-
-
 st.markdown("</div>", unsafe_allow_html=True)
-
-
 
 st.markdown("<div class='zoom-container'>", unsafe_allow_html=True)
 col1, col2, col3 = st.columns([1, 1, 1])
@@ -576,13 +565,12 @@ with col1:
     if st.button("➖ تصغير", key="zoom_out"):
         st.session_state.zoom = max(st.session_state.zoom - 0.1, 0.2)
         st.session_state.changed_by_mobile_toggle = False
-        st.rerun()
+        st.experimental_rerun()
 with col2:
     st.markdown(f"<div style='text-align:center;font-weight:bold;margin-top:8px;'>🔍 {st.session_state.zoom * 100:.0f}%</div>", unsafe_allow_html=True)
 with col3:
     if st.button("➕ تكبير", key="zoom_in"):
         st.session_state.zoom = min(st.session_state.zoom + 0.1, 3.0)
         st.session_state.changed_by_mobile_toggle = False
-        st.rerun()
-
+        st.experimental_rerun()
 st.markdown("</div>", unsafe_allow_html=True)
