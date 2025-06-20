@@ -114,6 +114,7 @@ def load_data():
     return df
 
 data = load_data()
+id_to_name = {row['id']: row['name'] for _, row in data.iterrows()}
 
 # قاموس التعريب
 column_translations = {
@@ -526,13 +527,14 @@ if selected_points:
         raw_id = selected_points[0].get('customdata', '')
         # إذا كانت customdata قائمة، خذ أول عنصر منها
         if isinstance(raw_id, (list, tuple)):
-            if len(raw_id) > 0:
-                raw_id = raw_id[0]
-            else:
-                raw_id = ''
+            raw_id = raw_id[0] if len(raw_id) > 0 else ''
         if raw_id and str(raw_id).isdigit():
             selected_id = int(raw_id)
 
+            # جلب الاسم مباشرة من القاموس
+            selected_name = id_to_name.get(selected_id, "غير معروف")
+
+            # إذا كنت تحتاج بيانات أخرى، ابحث في dataframe مرة واحدة فقط
             selected_person = data[data['id'] == selected_id].iloc[0]
 
             def get_fathers_chain(df, pid, max_depth=10):
@@ -543,7 +545,9 @@ if selected_points:
                     if row.empty:
                         break
                     person = row.iloc[0]
-                    chain.append(f"{person['name']} ({person['id']})")
+                    # استبدل الاسم بالاسم من القاموس (اختياري)
+                    name = id_to_name.get(person['id'], person['name'])
+                    chain.append(f"{name} ({person['id']})")
                     if pd.isna(person['father_id']):
                         break
                     current_id = int(person['father_id'])
@@ -552,7 +556,7 @@ if selected_points:
             father_chain = get_fathers_chain(data, selected_id)
 
             st.markdown("### 👤 الشخص المحدد:")
-            st.info(f"**{selected_person['name']}** (المعرف: {selected_id})")
+            st.info(f"**{selected_name}** (المعرف: {selected_id})")
 
             st.markdown("### 🧬 تسلسل الآباء:")
             st.success(father_chain)
